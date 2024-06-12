@@ -2,6 +2,7 @@ const { test, describe } = require("node:test");
 const assert = require("node:assert");
 const favoriteBlog = require("../utils/list_helper").favoriteBlog;
 const mostBlogs = require("../utils/list_helper").mostBlogs;
+const mostLikes = require("../utils/list_helper").mostLikes;
 
 const blogs = [
   {
@@ -74,5 +75,16 @@ describe("most blogs", () => {
 
   test("writer is found right", () => {
     assert.deepStrictEqual(mostBlogs(blogs), highestBlogger);
+  });
+});
+
+describe("most liked", () => {
+  const highestLikedBlogger = {
+    author: "Edsger W. Dijkstra",
+    likes: 17,
+  };
+
+  test("writer is found right", () => {
+    assert.deepStrictEqual(mostLikes(blogs), highestLikedBlogger);
   });
 });

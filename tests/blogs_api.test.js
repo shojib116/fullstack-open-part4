@@ -69,6 +69,26 @@ test("value of likes defaults to 0", async () => {
   assert.strictEqual(response.body.likes, 0);
 });
 
+test("blog cannot be saved without title", async () => {
+  const newBlog = {
+    author: "Dummy writer",
+    url: "http://blog.cleancoder.com/uncle-bob/2016/05/01/DummyWars.html",
+    likes: 50,
+  };
+
+  await api.post("/api/blogs").send(newBlog).expect(400);
+});
+
+test("blog cannot be saved without url", async () => {
+  const newBlog = {
+    title: "Dummy wars",
+    author: "Dummy writer",
+    likes: 50,
+  };
+
+  await api.post("/api/blogs").send(newBlog).expect(400);
+});
+
 after(async () => {
   mongoose.connection.close();
 });

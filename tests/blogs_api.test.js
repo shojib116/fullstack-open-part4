@@ -26,6 +26,12 @@ test("returning all the blogs in json format", async () => {
   assert.strictEqual(response.body.length, helper.initialBlogs.length);
 });
 
+test("all blogs have an id field", async () => {
+  const response = await api.get("/api/blogs").expect(200);
+
+  response.body.map((blog) => assert.strictEqual(typeof blog.id, "string"));
+});
+
 after(async () => {
   mongoose.connection.close();
 });

@@ -32,6 +32,27 @@ test("all blogs have an id field", async () => {
   response.body.map((blog) => assert.strictEqual(typeof blog.id, "string"));
 });
 
+test("new blogs can be added without a hiccup", async () => {
+  const newBlog = {
+    title: "Dummy wars",
+    author: "Dummy writer",
+    url: "http://blog.cleancoder.com/uncle-bob/2016/05/01/DummyWars.html",
+    likes: 100,
+  };
+
+  await api
+    .post("/api/blogs")
+    .send(newBlog)
+    .expect(201)
+    .expect("Content-Type", /application\/json/);
+
+  const latestBlogs = await helper.blogsInDB();
+  assert.strictEqual(latestBlogs.length, helper.initialBlogs.length + 1);
+
+  const titles = latestBlogs.map((blog) => blog.title);
+  assert(titles.includes("Dummy wars"));
+});
+
 after(async () => {
   mongoose.connection.close();
 });

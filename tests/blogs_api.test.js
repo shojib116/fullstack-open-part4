@@ -89,6 +89,20 @@ test("blog cannot be saved without url", async () => {
   await api.post("/api/blogs").send(newBlog).expect(400);
 });
 
+test("a single blog can be deleted with status code 204", async () => {
+  const initialBlogs = await helper.blogsInDB();
+  const blogToDelete = initialBlogs[0];
+
+  await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+
+  const blogsAtEnd = await helper.blogsInDB();
+
+  assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1);
+
+  const titles = blogsAtEnd.map((blog) => blog.title);
+  assert(!titles.includes(blogToDelete.title));
+});
+
 after(async () => {
   mongoose.connection.close();
 });

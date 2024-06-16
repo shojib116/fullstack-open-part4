@@ -89,9 +89,29 @@ test("blog cannot be saved without url", async () => {
   await api.post("/api/blogs").send(newBlog).expect(400);
 });
 
+test("updating a single blog succeeds", async () => {
+  const blogsAtStart = await helper.blogsInDB();
+
+  const updatedTitle = "I'm radioactive, radioactive";
+  const blogToUpdate = blogsAtStart[0];
+  const updatedBlog = {
+    title: updatedTitle,
+    author: blogToUpdate.author,
+    url: blogToUpdate.url,
+    likes: blogToUpdate.likes,
+  };
+
+  await api.put(`/api/blogs/${blogToUpdate.id}`).send(updatedBlog).expect(200);
+
+  const blogsAtEnd = await helper.blogsInDB();
+  const titles = blogsAtEnd.map((blog) => blog.title);
+
+  assert(titles.includes(updatedTitle));
+});
+
 test("a single blog can be deleted with status code 204", async () => {
-  const initialBlogs = await helper.blogsInDB();
-  const blogToDelete = initialBlogs[0];
+  const blogsAtStart = await helper.blogsInDB();
+  const blogToDelete = blogsAtStart[0];
 
   await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
 

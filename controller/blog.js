@@ -1,6 +1,6 @@
 const blogsRouter = require("express").Router();
 const jwt = require("jsonwebtoken");
-
+const middleware = require("../utils/middleware");
 const Blog = require("../models/blog");
 const User = require("../models/user");
 
@@ -9,14 +9,9 @@ blogsRouter.get("/", async (request, response) => {
   response.json(blogs);
 });
 
-blogsRouter.post("/", async (request, response) => {
+blogsRouter.post("/", middleware.userExtractor, async (request, response) => {
   const body = request.body;
-
-  const decodedToken = jwt.verify(request.token, process.env.SECRET);
-  if (!decodedToken.id)
-    return response.status(401).json({ error: "invalid token" });
-
-  const user = await User.findById(decodedToken.id);
+  const user = request.user;
 
   const blog = new Blog({
     title: body.title,
@@ -52,27 +47,29 @@ blogsRouter.put("/:id", async (request, response) => {
   response.json(returnedBlog);
 });
 
-blogsRouter.delete("/:id", async (request, response) => {
-  const decodedToken = jwt.verify(request.token, process.env.SECRET);
-  const userId = decodedToken.id;
-  if (!userId) {
-    return response.status(401).json({ error: "invalid token" });
+blogsRouter.delete(
+  "/:id",
+  middleware.userExtractor,
+  async (request, response) => {
+    const user = request.user;
+
+    const blog = await Blog.findById(request.params.id);
+
+    if (!blog) {
+      return response.status(204).end();
+    }
+
+    if (blog.user.toString() !== user._id.toString()) {
+      return response
+        .status(403)
+        .json({
+          error: "sorry, you are not authorized to perform this action",
+        });
+    }
+
+    await blog.deleteOne();
+    response.status(204).end();
   }
-
-  const blog = await Blog.findById(request.params.id);
-
-  if (!blog) {
-    return response.status(204).end();
-  }
-
-  if (blog.user.toString() !== userId.toString()) {
-    return response
-      .status(403)
-      .json({ error: "sorry, you are not authorized to perform this action" });
-  }
-
-  await blog.deleteOne();
-  response.status(204).end();
-});
+);
 
 module.exports = blogsRouter;

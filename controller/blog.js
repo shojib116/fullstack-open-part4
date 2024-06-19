@@ -25,7 +25,7 @@ blogsRouter.post("/", async (request, response) => {
     likes: body.likes,
     user: user._id,
   });
-  console.log(user);
+
   const savedBlog = await blog.save();
   user.blogs = user.blogs.concat(savedBlog._id);
   await user.save();
@@ -53,7 +53,25 @@ blogsRouter.put("/:id", async (request, response) => {
 });
 
 blogsRouter.delete("/:id", async (request, response) => {
-  await Blog.findByIdAndDelete(request.params.id);
+  const decodedToken = jwt.verify(request.token, process.env.SECRET);
+  const userId = decodedToken.id;
+  if (!userId) {
+    return response.status(401).json({ error: "invalid token" });
+  }
+
+  const blog = await Blog.findById(request.params.id);
+
+  if (!blog) {
+    return response.status(204).end();
+  }
+
+  if (blog.user.toString() !== userId.toString()) {
+    return response
+      .status(403)
+      .json({ error: "sorry, you are not authorized to perform this action" });
+  }
+
+  await blog.deleteOne();
   response.status(204).end();
 });
 

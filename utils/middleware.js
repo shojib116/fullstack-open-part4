@@ -34,8 +34,17 @@ const modifiedMorgan = morgan(
   ":method :url :status :res[content-length] - :response-time ms :body"
 );
 
+const tokenExtractor = (request, response, next) => {
+  const authorization = request.get("authorization");
+  if (authorization && authorization.startsWith("Bearer"))
+    request.token = authorization.replace("Bearer ", "");
+
+  next();
+};
+
 module.exports = {
   unknownEndpoint,
   modifiedMorgan,
   errorHandler,
+  tokenExtractor,
 };

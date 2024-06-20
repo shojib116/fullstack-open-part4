@@ -40,7 +40,13 @@ const initialBlogs = [
   },
 ];
 
-const initialUsers = [];
+const initialUsers = [
+  {
+    username: "nhs",
+    name: "Nazmul Hasan Shajib",
+    password: "shajib",
+  },
+];
 
 const blogsInDB = async () => {
   const blogs = await Blog.find({});
@@ -52,9 +58,28 @@ const usersIndDB = async () => {
   return users.map((user) => user.toJSON());
 };
 
+const getSavedUserId = async (api) => {
+  await User.deleteMany({});
+  const user = initialUsers[0];
+  const response = await api.post("/api/users").send(user);
+  return response.body.id;
+};
+
+const getToken = async (api) => {
+  const user = initialUsers[0];
+  const response = await api.post("/api/login").send({
+    username: user.username,
+    password: user.password,
+  });
+
+  return response.body.token;
+};
+
 module.exports = {
   initialBlogs,
   initialUsers,
   blogsInDB,
   usersIndDB,
+  getSavedUserId,
+  getToken,
 };

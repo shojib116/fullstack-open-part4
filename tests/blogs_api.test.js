@@ -1,4 +1,4 @@
-const { test, after, beforeEach } = require("node:test");
+const { test, after, beforeEach, beforeAll } = require("node:test");
 const app = require("../app");
 const supertest = require("supertest");
 const helper = require("./test_helper");
@@ -10,8 +10,11 @@ const api = supertest(app);
 
 beforeEach(async () => {
   await Blog.deleteMany({});
+  const userId = await helper.getSavedUserId(api);
 
-  const blogObjects = helper.initialBlogs.map((blog) => new Blog(blog));
+  const blogObjects = helper.initialBlogs.map(
+    (blog) => new Blog({ ...blog, user: userId })
+  );
   const promiseArray = blogObjects.map((blog) => blog.save());
 
   await Promise.all(promiseArray);
@@ -40,9 +43,11 @@ test("new blogs can be added without a hiccup", async () => {
     likes: 100,
   };
 
+  const token = await helper.getToken(api);
   await api
     .post("/api/blogs")
     .send(newBlog)
+    .set("Authorization", `Bearer ${token}`)
     .expect(201)
     .expect("Content-Type", /application\/json/);
 
@@ -60,9 +65,11 @@ test("value of likes defaults to 0", async () => {
     url: "http://blog.cleancoder.com/uncle-bob/2016/05/01/DummyWars.html",
   };
 
+  const token = await helper.getToken(api);
   const response = await api
     .post("/api/blogs")
     .send(newBlog)
+    .set("Authorization", `Bearer ${token}`)
     .expect(201)
     .expect("Content-Type", /application\/json/);
 
@@ -76,7 +83,12 @@ test("blog cannot be saved without title", async () => {
     likes: 50,
   };
 
-  await api.post("/api/blogs").send(newBlog).expect(400);
+  const token = await helper.getToken(api);
+  await api
+    .post("/api/blogs")
+    .send(newBlog)
+    .set("Authorization", `Bearer ${token}`)
+    .expect(400);
 });
 
 test("blog cannot be saved without url", async () => {
@@ -86,7 +98,12 @@ test("blog cannot be saved without url", async () => {
     likes: 50,
   };
 
-  await api.post("/api/blogs").send(newBlog).expect(400);
+  const token = await helper.getToken(api);
+  await api
+    .post("/api/blogs")
+    .send(newBlog)
+    .set("Authorization", `Bearer ${token}`)
+    .expect(400);
 });
 
 test("updating a single blog succeeds", async () => {
@@ -113,7 +130,11 @@ test("a single blog can be deleted with status code 204", async () => {
   const blogsAtStart = await helper.blogsInDB();
   const blogToDelete = blogsAtStart[0];
 
-  await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+  const token = await helper.getToken(api);
+  await api
+    .delete(`/api/blogs/${blogToDelete.id}`)
+    .set("Authorization", `Bearer ${token}`)
+    .expect(204);
 
   const blogsAtEnd = await helper.blogsInDB();
 

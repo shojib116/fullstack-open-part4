@@ -32,6 +32,7 @@ blogsRouter.put("/:id", async (request, response) => {
   const body = request.body;
 
   const blog = {
+    user: body.user,
     title: body.title,
     author: body.author,
     url: body.url,
@@ -60,11 +61,9 @@ blogsRouter.delete(
     }
 
     if (blog.user.toString() !== user._id.toString()) {
-      return response
-        .status(403)
-        .json({
-          error: "sorry, you are not authorized to perform this action",
-        });
+      return response.status(403).json({
+        error: "sorry, you are not authorized to perform this action",
+      });
     }
 
     await blog.deleteOne();

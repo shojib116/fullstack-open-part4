@@ -1,4 +1,5 @@
 const express = require("express");
+require("dotenv").config();
 require("express-async-errors");
 const app = express();
 const cors = require("cors");
@@ -14,6 +15,11 @@ app.use(middleware.modifiedMorgan);
 app.use("/api/blogs", blogsRouter);
 app.use("/api/users", userRouter);
 app.use("/api/login", loginRouter);
+
+if (process.env.NODE_ENV === "test") {
+  const testRouter = require("./controller/testing");
+  app.use("/api/tests", testRouter);
+}
 
 app.use(middleware.unknownEndpoint);
 app.use(middleware.errorHandler);
